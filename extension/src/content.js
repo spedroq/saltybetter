@@ -49,7 +49,7 @@ let calculateFightResult = (balance) => {
         console.log('FIGHT WON ++++');
         totalWins += 1;
     } else {
-        console.log('FIGHT LOST ++++');
+        console.log('FIGHT LOST ----');
     }
     totalBets += 1;
     console.log(`-> Win rate so far: ${totalWins}/${totalBets}`);
@@ -75,7 +75,7 @@ let better = async () => {
             calculateFightResult(balance);
         }
         // Can Bet
-        console.log('---- CAN BET -----');
+        console.log('---- CAN BET ----');
 
         let betAmount = 0;
         if (convertToInt(balance) > 1000 && !tournamentElement) {
@@ -99,11 +99,11 @@ let better = async () => {
         previousBalance = balance;
         alreadyBet = true;
     } else {
-        console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
+        console.log('XXXX FIGHT ONGOING XXXX')
         alreadyBet = false;
     }
 
-    console.log('---------------------------\n\n');
+    console.log('-------------------------\n\n');
 }
 
 let sleep = (ms) => {
@@ -119,8 +119,6 @@ async function bettingLoop() {
 
 
 // MAIN
-console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-console.log('WELCOME TO:\n')
 console.log(
     `
   ____   ____   _    _____ __  _______  ____  _____  _____  ____ _____
@@ -129,5 +127,3 @@ console.log(
  
    ` 
 )
-console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-bettingLoop();
