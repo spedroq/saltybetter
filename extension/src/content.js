@@ -2,6 +2,7 @@ let fightOngoingText = 'Bets are locked until the next match.';
 let betDirection = 0;
 let alreadyBet = false;
 let previousBalance = null;
+let hasBegun = false;
 
 let totalBets = 0;
 let totalWins = 0;
@@ -34,7 +35,12 @@ let placeBet = () => {
 }
 
 let calculateFightResult = (balance) => {
-    console.log('\n\n-------- Fight Results -------');
+    if (!hasBegun) {
+        console.log('**NOTE: fight ended but we have not yet bet');
+        hasBegun = true;
+        return
+    }
+    console.log('\n\n--- Fight Results ---');
     const amountGained = convertToInt(balance) - convertToInt(previousBalance);
     console.log('previousBalance:', previousBalance);
     console.log('balance:', balance);
@@ -47,8 +53,9 @@ let calculateFightResult = (balance) => {
     }
     totalBets += 1;
     console.log(`-> Win rate so far: ${totalWins}/${totalBets}`);
-
     totalAmountWon += amountGained;
+    console.log(`-> Total bet profit: ${totalAmountWon}`);
+    console.log('--------------\n\n');
 }
 
 let better = async () => {
@@ -77,7 +84,7 @@ let better = async () => {
             wagerElement.value = betAmount;
         } else {
             if (tournamentElement) {
-                console.log('$$$$$$$$$$$$$$$$$$$$$$$$$ Tournament $$$$$$$$$$$$$$$$$$$$$$$$$')
+                console.log('$$$$$$ Tournament $$$$$$')
             } else {
                 console.log('-- balance below 1000')
             }
@@ -109,4 +116,18 @@ async function bettingLoop() {
         await sleep(10000);
     }
 }
+
+
+// MAIN
+console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+console.log('WELCOME TO:\n')
+console.log(
+    `
+  ____   ____   _    _____ __  _______  ____  _____  _____  ____ _____
+ (_ (_´ / () \\ | |__|_   _|\\ \\/ /| () )| ===||_   _||_   _|| ===|| () )
+.__)__)/__/\\__\\|____| |_|   |__| |_()_)|____|  |_|    |_|  |____||_|\\_\\
+ 
+   ` 
+)
+console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 bettingLoop();
