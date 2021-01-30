@@ -1,182 +1,19 @@
-let fightOngoingText = 'Bets are locked until the next match.';
-let betsAreOpenText = 'Bets are OPEN!';
+'use strict';
 
-let betDirection = 0;
-let alreadyBet = false;
-let previousBalance = null;
-let hasBegun = false;
+let filePaths = [
+    "/src/scripts/main.js"
+]
 
-let totalBets = 0;
-let totalWins = 0;
-let totalAmountWon = 0;
-
-let lastMatchWasTournament = false;
-
-let convertToInt = (balance) => {
-    return parseInt(balance.replace(',', ''), 10);
+let registerFiles = (path) => {
+    const script = document.createElement('script');
+    script.setAttribute("type", "module");
+    script.setAttribute("src", chrome.extension.getURL(path));
+    const head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
+    head.insertBefore(script, head.lastChild);
 }
 
-let randomBet = () => {
-    if (!alreadyBet) {
-        console.log('Selecting a new direction to bet')
-        betDirection = Math.floor(Math.random() * 2);
-    }
+// Register the main file
+let i;
+for (i = 0; i < filePaths.length; i++) {
+    registerFiles(filePaths[0])
 }
-
-let placeBet = () => {
-    if (betDirection === 0) {
-        let redBetButton = document.getElementsByClassName('betbuttonred');
-        console.log('Bet red');
-        if (redBetButton?.length > 0) {
-            redBetButton[0].click()
-        }
-    } else {
-        let blueBetButton = document.getElementsByClassName('betbuttonblue');
-        console.log('Bet blue')
-        if (blueBetButton?.length > 0) {
-            blueBetButton[0].click()
-        }
-    }
-}
-
-let placeRandomBet = () => {
-    randomBet();
-    placeBet()
-    alreadyBet = true;
-}
-
-let calculateFightResult = (balance) => {
-    if (!hasBegun) {
-        console.log('**NOTE: fight ended but we have not yet bet');
-        hasBegun = true;
-        return
-    }
-    console.log('\n\n--- Fight Results ---');
-    const amountGained = convertToInt(balance) - convertToInt(previousBalance);
-    console.log('previousBalance:', previousBalance);
-    console.log('balance:', balance);
-    console.log('amountGained:', amountGained);
-    if (amountGained >= 0) {
-        console.log('FIGHT WON ++++');
-        totalWins += 1;
-    } else {
-        console.log('FIGHT LOST ----');
-    }
-    totalBets += 1;
-    console.log(`-> Win rate so far: ${totalWins}/${totalBets}`);
-    totalAmountWon += amountGained;
-    console.log(`-> Total bet profit: ${totalAmountWon}`);
-    console.log('--------------\n\n');
-}
-
-let betAmount = (amount) => {
-    let wagerElement = document.getElementById('wager');
-    wagerElement.value = amount;
-    lastMatchWasTournament = false;
-}
-
-let betAllIn = () => {
-    let allInBetElement = document.getElementById('interval10');
-    allInBetElement?.click();
-}
-
-let better = async () => {
-    console.log('\n\n-------- New Reading -------');
-    let balanceElement = document.getElementById('balance');
-
-
-    let balance = balanceElement.innerText;
-    console.log('-> current balance:', balance);
-    let confirmBetElement = document.getElementById('betconfirm');
-    if (confirmBetElement) {
-        console.log('-> Bet already placed');
-        console.log('---------------------------\n\n');
-        return;
-    }
-
-    let tournamentElement = document.getElementById('tournament-note');
-    let betStatusElement = document.getElementById('betstatus');
-    
-    if (tournamentElement) {
-        lastMatchWasTournament = true
-    }
-
-    if (betStatusElement && betStatusElement.innerText !== fightOngoingText && betStatusElement.innerText === betsAreOpenText) {
-
-        if (!alreadyBet && previousBalance !== null) {
-            // Fight just Finished
-            calculateFightResult(balance);
-        }
-        // Can Bet
-        console.log('---- CAN BET -----');
-
-        if (tournamentElement || lastMatchWasTournament) {
-            console.log('$$$$$$ Tournament $$$$$$')
-            if (!tournamentElement) {
-                console.log('$$$$$$ Final Fight Hype!!! $$$$$$')
-                lastMatchWasTournament = false
-            } else {
-                lastMatchWasTournament = true
-            }
-            console.log(`-- All In - Let's Go!`)
-            betAllIn();
-        } else {
-            let limitAmount = 1500;
-            let amountToBet = 1000;
-            lastMatchWasTournament = false
-            if (convertToInt(balance) >= limitAmount) {
-                betAmount(amountToBet);
-            } else {
-                console.log(`-- balance below ${limitAmount}`)
-                console.log(`-- All In - Let's Go!`)
-                // All In
-                betAllIn();
-            }
-        }
-        // Actually Bet
-        placeRandomBet();
-        previousBalance = balance;
-    } else if (betStatusElement.innerText === fightOngoingText) {
-        console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
-        alreadyBet = false;
-    } else {
-        console.log('XXXXXXXX FIGHT FINISHING XXXXXXXX')
-        alreadyBet = false;
-    }
-    console.log('---------------------------\n\n');
-}
-
-let sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-let textIntroduction = async () => {
-    console.log('\n...\n');
-    await sleep(500);
-    console.log('hello, I am Morpheus and will be your salty better this session');
-    console.log('...\n');
-    await sleep(500);
-    console.log('all you need to do is sit back and watch, I will bet for you');
-    console.log('...\n');
-    await sleep(500);
-}
-
-async function bettingLoop() {
-    await textIntroduction();
-    while (true) {
-        await better();
-        await sleep(15000);
-    }
-}
-
-
-// MAIN
-console.log(
-    `
-  ____   ____   _    _____ __  _______  ____  _____  _____  ____ _____
- (_ (_´ / () \\ | |__|_   _|\\ \\/ /| () )| ===||_   _||_   _|| ===|| () )
-.__)__)/__/\\__\\|____| |_|   |__| |_()_)|____|  |_|    |_|  |____||_|\\_\\
-
-   ` 
-)
-bettingLoop();

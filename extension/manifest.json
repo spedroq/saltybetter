@@ -1,7 +1,7 @@
 {
-    "name": "Getting Started Example",
+    "name": "Salty Better",
     "version": "1.0",
-    "description": "Build an Extension!",
+    "description": "Bot that automatically bets on Salty Bet.",
     "permissions": ["activeTab", "declarativeContent", "storage"],
     "background": {
         "scripts": ["src/background.js"],
@@ -24,10 +24,17 @@
     },
     "content_scripts": [
         {
-          "matches": ["*://*.saltybet.com/"],
-          "js": ["src/content.js"]
+            "matches": ["*://*.saltybet.com/"],
+            "js": ["src/content.js"]
         }
-      ],
+    ],
+    "web_accessible_resources": [
+        "/src/scripts/main.js",
+        "/src/scripts/engine/better_engine.js",
+        "/src/scripts/engine/text_engine.js",
+        "/src/scripts/model/constants_model.js",
+        "/src/scripts/utils.js"
+    ],
     "options_page": "src/html/options.html",
     "manifest_version": 2
 }
