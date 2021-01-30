@@ -52,7 +52,7 @@ let calculateFightResult = (balance) => {
         console.log('FIGHT WON ++++');
         totalWins += 1;
     } else {
-        console.log('FIGHT LOST ++++');
+        console.log('FIGHT LOST ----');
     }
     totalBets += 1;
     console.log(`-> Win rate so far: ${totalWins}/${totalBets}`);
@@ -69,7 +69,6 @@ let better = async () => {
     let balance = balanceElement.innerText;
     console.log('-> current balance:', balance);
     let confirmBetElement = document.getElementById('betconfirm');
-    console.log('confirmBetElement:', confirmBetElement)
     if (confirmBetElement) {
         console.log('-> Bet already placed');
         console.log('---------------------------\n\n');
