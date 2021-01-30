@@ -1,8 +1,19 @@
 let fightOngoingText = 'Bets are locked until the next match.';
 let betDirection = 0;
+let alreadyBet = false;
+let previousBalance = null;
+
+let totalBets = 0;
+let totalWins = 0;
+let totalAmountWon = 0;
+
+let convertToInt = (balance) => {
+    return parseInt(balance.replace(',', ''), 10);
+}
 let randomBet = () => {
     if (!alreadyBet) {
-        betdirection = Math.floor(Math.random() * 2);
+        console.log('Selecting a new direction to bet')
+        betDirection = Math.floor(Math.random() * 2);
     }
 }
 
@@ -22,10 +33,26 @@ let placeBet = () => {
     }
 }
 
-let alreadyBet = false;
+let calculateFightResult = (balance) => {
+    console.log('\n\n-------- Fight Results -------');
+    const amountGained = convertToInt(balance) - convertToInt(previousBalance);
+    console.log('previousBalance:', previousBalance);
+    console.log('balance:', balance);
+    console.log('amountGained:', amountGained);
+    if (amountGained > 0) {
+        console.log('FIGHT WON ++++');
+        totalWins += 1;
+    } else {
+        console.log('FIGHT LOST ++++');
+    }
+    totalBets += 1;
+    console.log(`-> Win rate so far: ${totalWins}/${totalBets}`);
 
-let better = () => {
-    console.log('\n\n--------New Reading-------');
+    totalAmountWon += amountGained;
+}
+
+let better = async () => {
+    console.log('\n\n-------- New Reading -------');
     let balanceElement = document.getElementById('balance');
     let tournamentElement = document.getElementById('tournament-note');
     let betStatusElement = document.getElementById('betstatus');
@@ -35,31 +62,41 @@ let better = () => {
     console.log('-> current balance:', balance);
 
     if (betStatusElement && betStatusElement.innerText !== fightOngoingText) {
+
+        if (!alreadyBet && previousBalance !== null) {
+            // Fight just Finished
+            calculateFightResult(balance);
+        }
         // Can Bet
         console.log('---- CAN BET -----');
 
         let betAmount = 0;
-        if (parseInt(balance.replace(',', ''), 10) > 1000) {
+        if (convertToInt(balance) > 1000 && !tournamentElement) {
             console.log('** balance above 1000')
             betAmount = 1000;
             wagerElement.value = betAmount;
-            randomBet();
-            placeBet();
-            alreadyBet = true;
         } else {
-            console.log('-- balance below 1000')
+            if (tournamentElement) {
+                console.log('$$$$$$$$$$$$$$$$$$$$$$$$$ Tournament $$$$$$$$$$$$$$$$$$$$$$$$$')
+            } else {
+                console.log('-- balance below 1000')
+            }
             console.log(`-- All In - Let's Go!`)
             // All In
             let allInBetElement = document.getElementById('interval10');
             allInBetElement?.click();
-            randomBet();
-            placeBet()
-            alreadyBet = true;
         }
+        // Place bet
+        randomBet();
+        placeBet()
+        previousBalance = balance;
+        alreadyBet = true;
     } else {
         console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
         alreadyBet = false;
     }
+
+    console.log('---------------------------\n\n');
 }
 
 let sleep = (ms) => {
@@ -68,9 +105,8 @@ let sleep = (ms) => {
 
 async function bettingLoop() {
     while (true) {
-        better();
+        await better();
         await sleep(10000);
     }
 }
-console.log(fetch);
 bettingLoop();
