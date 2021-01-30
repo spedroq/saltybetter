@@ -10,6 +10,8 @@ let totalBets = 0;
 let totalWins = 0;
 let totalAmountWon = 0;
 
+let lastMatchWasTournament = false;
+
 let convertToInt = (balance) => {
     return parseInt(balance.replace(',', ''), 10);
 }
@@ -37,6 +39,12 @@ let placeBet = () => {
     }
 }
 
+let placeRandomBet = () => {
+    randomBet();
+    placeBet()
+    alreadyBet = true;
+}
+
 let calculateFightResult = (balance) => {
     if (!hasBegun) {
         console.log('**NOTE: fight ended but we have not yet bet');
@@ -61,6 +69,17 @@ let calculateFightResult = (balance) => {
     console.log('--------------\n\n');
 }
 
+let betAmount = (amount) => {
+    let wagerElement = document.getElementById('wager');
+    wagerElement.value = amount;
+    lastMatchWasTournament = false;
+}
+
+let betAllIn = () => {
+    let allInBetElement = document.getElementById('interval10');
+    allInBetElement?.click();
+}
+
 let better = async () => {
     console.log('\n\n-------- New Reading -------');
     let balanceElement = document.getElementById('balance');
@@ -77,9 +96,12 @@ let better = async () => {
 
     let tournamentElement = document.getElementById('tournament-note');
     let betStatusElement = document.getElementById('betstatus');
-    let wagerElement = document.getElementById('wager');
+    
+    if (tournamentElement) {
+        lastMatchWasTournament = true
+    }
 
-    if (betStatusElement && betStatusElement.innerText !== fightOngoingText) {
+    if (betStatusElement && betStatusElement.innerText !== fightOngoingText && betStatusElement.innerText === betsAreOpenText) {
 
         if (!alreadyBet && previousBalance !== null) {
             // Fight just Finished
@@ -88,32 +110,39 @@ let better = async () => {
         // Can Bet
         console.log('---- CAN BET -----');
 
-        let betAmount = 0;
-        if (convertToInt(balance) > 1500 && !tournamentElement) {
-            console.log('** balance above 1500')
-            betAmount = 1000;
-            wagerElement.value = betAmount;
-        } else {
-            if (tournamentElement) {
-                console.log('$$$$$$ Tournament $$$$$$')
+        if (tournamentElement || lastMatchWasTournament) {
+            console.log('$$$$$$ Tournament $$$$$$')
+            if (!tournamentElement) {
+                console.log('$$$$$$ Final Fight Hype!!! $$$$$$')
+                lastMatchWasTournament = false
             } else {
-                console.log('-- balance below 1500')
+                lastMatchWasTournament = true
             }
             console.log(`-- All In - Let's Go!`)
-            // All In
-            let allInBetElement = document.getElementById('interval10');
-            allInBetElement?.click();
+            betAllIn();
+        } else {
+            let limitAmount = 1500;
+            let amountToBet = 1000;
+            lastMatchWasTournament = false
+            if (convertToInt(balance) >= limitAmount) {
+                betAmount(amountToBet);
+            } else {
+                console.log(`-- balance below ${limitAmount}`)
+                console.log(`-- All In - Let's Go!`)
+                // All In
+                betAllIn();
+            }
         }
-        // Place bet
-        randomBet();
-        placeBet()
+        // Actually Bet
+        placeRandomBet();
         previousBalance = balance;
-        alreadyBet = true;
-    } else {
+    } else if (betStatusElement.innerText === fightOngoingText) {
         console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
         alreadyBet = false;
+    } else {
+        console.log('XXXXXXXX FIGHT FINISHING XXXXXXXX')
+        alreadyBet = false;
     }
-
     console.log('---------------------------\n\n');
 }
 
