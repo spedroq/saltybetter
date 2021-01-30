@@ -45,7 +45,7 @@ let calculateFightResult = (balance) => {
     console.log('previousBalance:', previousBalance);
     console.log('balance:', balance);
     console.log('amountGained:', amountGained);
-    if (amountGained > 0) {
+    if (amountGained >= 0) {
         console.log('FIGHT WON ++++');
         totalWins += 1;
     } else {
