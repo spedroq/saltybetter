@@ -1,4 +1,4 @@
-import { betsAreOpenText, fightOngoingText } from "../model/constants_model.js";
+import { betsAreOpenText, fightOngoingText, defaultConfiguration } from "../model/constants_model.js";
 import { TextEngine } from "./text_engine.js";
 import { sleep } from "../utils.js";
 
@@ -16,11 +16,24 @@ export class BetterEngine {
     lastMatchWasTournament = false;
     textEngine = null;
 
+    configuration = defaultConfiguration;
+
     constructor() {
         this.textEngine = new TextEngine();
     }
 
+    checkForConfiguration = () => {
+        const saltyBetterConfigurationElement = document.getElementById('salty-better-configuration');
+        console.log('saltyBetterConfigurationElement:', saltyBetterConfigurationElement);
+        const configurationString = saltyBetterConfigurationElement?.getAttribute('configuration');
+        
+        console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% configurationString:', configurationString)
+        const configuration = configurationString ? JSON.parse(configurationString) : null;
+        console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% configuration:', configuration)
+    }
+
     startBetting = async () => {
+        console.log('chrome', chrome);
         await this.textEngine.textIntroduction();
         while (true) {
             await this.better();
@@ -97,9 +110,10 @@ export class BetterEngine {
     }
     
     better = async () => {
+        this.checkForConfiguration();
+
         console.log('\n\n-------- New Reading -------');
         let balanceElement = document.getElementById('balance');
-    
     
         let balance = balanceElement.innerText;
         console.log('-> current balance:', balance);
@@ -138,8 +152,8 @@ export class BetterEngine {
                 console.log(`-- All In - Let's Go!`)
                 this.betAllIn();
             } else {
-                let limitAmount = 1500;
-                let amountToBet = 1000;
+                let limitAmount = this.configuration.betAmountLimit;
+                let amountToBet = this.configuration.betAmount;
                 this.lastMatchWasTournament = false
                 if (this.convertBalanceToInt(balance) >= limitAmount) {
                     this.betAmount(amountToBet);

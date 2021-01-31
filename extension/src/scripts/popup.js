@@ -24,6 +24,35 @@ changeColor.onclick = function(element) {
 
 // Setup the betting configuration buttons
 
-// let bet1000 = document.getElementById('bet-1000');
-// let bet500 = document.getElementById('bet-500');
+let bet1000 = document.getElementById('bet-1000');
+let bet500 = document.getElementById('bet-500');
 
+bet500.onclick = function(element) {
+    console.log('Clicked the fucking button');
+    console.log('chrome:', chrome);
+    chrome.tabs.query({active: true, currentWindow: true},function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {amount: 500}, function(response) {
+            console.log(response);
+        });
+    });
+
+    // chrome.extension.sendMessage({
+    //     action: "bet",
+    //     amount: 500,
+    //     request: 'lelelelelele'
+    // }, () => { console.log('some handler for on click sendMessage')});
+}
+
+bet1000.onclick = function(element) {
+    chrome.tabs.query({active: true, currentWindow: true},function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {amount: 500}, function(response) {
+            console.log(response);
+            return;
+        });
+    });
+    // chrome.extension.sendMessage({
+    //     action: "bet",
+    //     amount: 1000,
+    //     request: 'luuuuuuuuuuuulll'
+    // }, () => { console.log('some handler for on click sendMessage')});
+}
