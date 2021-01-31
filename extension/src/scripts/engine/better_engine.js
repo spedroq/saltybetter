@@ -24,12 +24,18 @@ export class BetterEngine {
 
     checkForConfiguration = () => {
         const saltyBetterConfigurationElement = document.getElementById('salty-better-configuration');
-        console.log('saltyBetterConfigurationElement:', saltyBetterConfigurationElement);
         const configurationString = saltyBetterConfigurationElement?.getAttribute('configuration');
-        
-        console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% configurationString:', configurationString)
+        if (!configurationString) {
+            return;
+        }
         const configuration = configurationString ? JSON.parse(configurationString) : null;
-        console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% configuration:', configuration)
+        console.log('\n% new configuration detected %');
+        if (configuration?.betAmount) {
+            this.configuration.betAmount = configuration.betAmount;
+            console.log('% new bet amount: ', this.configuration.betAmount);
+        }
+        console.log('\n');
+        saltyBetterConfigurationElement.remove();
     }
 
     startBetting = async () => {
