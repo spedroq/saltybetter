@@ -7,6 +7,7 @@ export class BetterEngine {
     betDirection = 0;
     alreadyBet = false;
     previousBalance = null;
+    balance = 0;
     hasBegun = false;
 
     totalBets = 0;
@@ -30,9 +31,9 @@ export class BetterEngine {
         }
         const configuration = configurationString ? JSON.parse(configurationString) : null;
         console.log('\n% new configuration detected %');
-        if (configuration?.betAmount) {
-            this.configuration.betAmount = configuration.betAmount;
-            console.log('% new bet amount: ', this.configuration.betAmount);
+        if (configuration?.rules?.length > 0) {
+            this.configuration.rules = configuration.rules;
+            console.log('% new bet rules: ', configuration.rules);
         }
         console.log('\n');
         saltyBetterConfigurationElement.remove();
@@ -80,16 +81,16 @@ export class BetterEngine {
         this.alreadyBet = true;
     }
     
-    calculateFightResult = (balance) => {
+    calculateFightResult = () => {
         if (!this.hasBegun) {
             console.log('**NOTE: fight ended but we have not yet bet');
             this.hasBegun = true;
             return
         }
         console.log('\n\n--- Fight Results ---');
-        const amountGained = this.convertBalanceToInt(balance) - this.convertBalanceToInt(this.previousBalance);
+        const amountGained = this.convertBalanceToInt(this.balance) - this.convertBalanceToInt(this.previousBalance);
         console.log('previousBalance:', this.previousBalance);
-        console.log('balance:', balance);
+        console.log('balance:', this.balance);
         console.log('amountGained:', amountGained);
         if (amountGained >= 0) {
             console.log('FIGHT WON ++++');
@@ -121,8 +122,8 @@ export class BetterEngine {
         console.log('\n\n-------- New Reading -------');
         let balanceElement = document.getElementById('balance');
     
-        let balance = balanceElement.innerText;
-        console.log('-> current balance:', balance);
+        this.balance = balanceElement.innerText;
+        console.log('-> current balance:', this.balance);
 
         let confirmBetElement = document.getElementById('betconfirm');
         if (confirmBetElement) {
@@ -142,7 +143,7 @@ export class BetterEngine {
     
             if (!this.alreadyBet && this.previousBalance !== null) {
                 // Fight just Finished
-                this.calculateFightResult(balance);
+                this.calculateFightResult();
             }
             // Can Bet
             console.log('---- CAN BET -----');
@@ -158,21 +159,11 @@ export class BetterEngine {
                 console.log(`-- All In - Let's Go!`)
                 this.betAllIn();
             } else {
-                let limitAmount = this.configuration.betAmountLimit;
-                let amountToBet = this.configuration.betAmount;
-                this.lastMatchWasTournament = false
-                if (this.convertBalanceToInt(balance) >= limitAmount) {
-                    this.betAmount(amountToBet);
-                } else {
-                    console.log(`-- balance below ${limitAmount}`)
-                    console.log(`-- All In - Let's Go!`)
-                    // All In
-                    this.betAllIn();
-                }
+                this.processBetRules();
             }
             // Actually Bet
             this.placeRandomBet();
-            this.previousBalance = balance;
+            this.previousBalance = this.balance.slice();
         } else if (betStatusElement.innerText === fightOngoingText) {
             console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
             this.alreadyBet = false;
@@ -181,5 +172,44 @@ export class BetterEngine {
             this.alreadyBet = false;
         }
         console.log('---------------------------\n\n');
+    }
+
+    processBetRules() {
+        this.lastMatchWasTournament = false;
+        
+        // Sort from largest limit amount rule
+        this.configuration.rules.sort((a, b) => b.limitAmount - a.limitAmount);
+        // Apply only the largest balance limit amount rule
+        let ruleApplied = false;
+        for (let rule of this.configuration.rules) {
+            if (this.processBetRule(rule)) {
+                ruleApplied = true;
+                break;
+            }
+        }
+        if (!ruleApplied) {
+            // If no rule has been applied so far, go for all in
+            console.log(`-- balance below any betting rule applied`)
+            console.log(`-- All In - Let's Go!`)
+            // All In
+            this.betAllIn();
+        }
+    }
+
+    processBetRule(rule) {
+        if (this.convertBalanceToInt(this.balance) >= rule.betAmountLimit) {
+            console.log(`-- balance above ${rule.betAmountLimit}`);
+            if (rule?.betAmount) {
+                console.log(`-- betting amount -> ${rule.betAmount}`);
+                this.betAmount(rule.betAmount);
+            }
+            if (rule?.betPercentage) {
+                // TODO: Bet a specific percentage
+                // console.log(`-- betting precentage -> ${rule.betPercentage}`);
+                // this.betPercentage(rule.betAmount);
+            }
+            return true;
+        }
+        return false;
     }
 }
