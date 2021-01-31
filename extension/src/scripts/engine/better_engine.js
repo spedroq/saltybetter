@@ -21,6 +21,7 @@ export class BetterEngine {
 
     constructor() {
         this.textEngine = new TextEngine();
+        this.configuration.rules.sort((a, b) => b.betAmountLimit - a.betAmountLimit)
     }
 
     checkForConfiguration = () => {
@@ -32,6 +33,7 @@ export class BetterEngine {
         const configuration = configurationString ? JSON.parse(configurationString) : null;
         console.log('\n% new configuration detected %');
         if (configuration?.rules?.length > 0) {
+            configuration.rules.sort((a, b) => b.betAmountLimit - a.betAmountLimit);
             this.configuration.rules = configuration.rules;
             console.log('% new bet rules: ', configuration.rules);
         }
@@ -176,9 +178,7 @@ export class BetterEngine {
 
     processBetRules() {
         this.lastMatchWasTournament = false;
-        
-        // Sort from largest limit amount rule
-        this.configuration.rules.sort((a, b) => b.limitAmount - a.limitAmount);
+
         // Apply only the largest balance limit amount rule
         let ruleApplied = false;
         for (let rule of this.configuration.rules) {
