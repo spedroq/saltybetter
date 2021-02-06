@@ -3,8 +3,8 @@ export const betsAreOpenText = 'Bets are OPEN!';
 export const defaultConfiguration = {
     rules: [
         {
-            betAmountLimit: 1500,
-            betAmount: 1000
+            betAmountLimit: 700,
+            betAmount: 500
         }
     ]
 };

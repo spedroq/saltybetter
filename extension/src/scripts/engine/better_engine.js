@@ -42,7 +42,6 @@ export class BetterEngine {
     }
 
     startBetting = async () => {
-        console.log('chrome', chrome);
         await this.textEngine.textIntroduction();
         while (true) {
             await this.better();
@@ -53,23 +52,68 @@ export class BetterEngine {
     convertBalanceToInt = (balance) => {
         return parseInt(balance.replace(',', ''), 10);
     }
+
+    httpGet = async (theUrl) => {
+        const xmlHttp = new XMLHttpRequest();
+        try {
+            xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+            xmlHttp.send( null );
+        } catch (e) {
+            console.log('No prediction was given.')
+        } finally {
+            return xmlHttp.responseText;  
+        }
+    }
     
+    decideBet = async () => {
+        console.log('decideBet')
+        const redNameSelector = '#sbettors1 .redtext strong';
+        const blueNameSelector = '#sbettors2 .bluetext strong';
+        const redName = document.querySelector(redNameSelector).innerHTML;
+        const blueName = document.querySelector(blueNameSelector).innerHTML;
+        console.log('redName', redName);
+        console.log('blueName', blueName);
+        const redNameB64 = btoa(redName);
+        const blueNameB64 = btoa(blueName);
+        console.log('redNameB64', redNameB64);
+        console.log('blueNameB64', blueNameB64);
+        const basePredictorURL = 'https://4f37cd7eb957.ngrok.io/';
+        const endpoint = 'predict'
+        const predictorURL = `${basePredictorURL}${endpoint}?red=${redNameB64}==&blue=${blueNameB64}`
+        console.log('trying to predict on url ->', predictorURL);
+        let predictorAnswer = {};
+        try {
+            predictorAnswer = JSON.parse(await this.httpGet(predictorURL));
+        } catch (e) {
+            // ignore errors from external predictor
+        }
+        
+        console.log('prediction -> ', predictorAnswer);
+        console.log('prediction value -> ', predictorAnswer?.prediction);
+        if (predictorAnswer?.prediction === 0 || predictorAnswer?.prediction === 1) {
+            console.log('predictorAnswer?.prediction:', predictorAnswer?.prediction)
+            this.betDirection = predictorAnswer?.prediction;
+        } else {
+            this.randomBet();
+        }
+    }
+
     randomBet = () => {
         if (!this.alreadyBet) {
-            console.log('Selecting a new direction to bet')
+            console.log('Selecting a new random direction to bet')
             this.betDirection = Math.floor(Math.random() * 2);
         }
     }
     
     placeBet = () => {
         if (this.betDirection === 0) {
-            let redBetButton = document.getElementsByClassName('betbuttonred');
+            const redBetButton = document.getElementsByClassName('betbuttonred');
             console.log('Bet red');
             if (redBetButton?.length > 0) {
                 redBetButton[0].click()
             }
         } else {
-            let blueBetButton = document.getElementsByClassName('betbuttonblue');
+            const blueBetButton = document.getElementsByClassName('betbuttonblue');
             console.log('Bet blue')
             if (blueBetButton?.length > 0) {
                 blueBetButton[0].click()
@@ -77,13 +121,13 @@ export class BetterEngine {
         }
     }
     
-    placeRandomBet = () => {
-        this.randomBet();
+    performBet = async () => {
+        await this.decideBet();
         this.placeBet()
         this.alreadyBet = true;
     }
     
-    calculateFightResult = () => {
+    calculateFightResult = async () => {
         if (!this.hasBegun) {
             console.log('**NOTE: fight ended but we have not yet bet');
             this.hasBegun = true;
@@ -105,6 +149,7 @@ export class BetterEngine {
         this.totalAmountWon += amountGained;
         console.log(`-> Total bet profit: ${this.totalAmountWon}`);
         console.log('--------------\n\n');
+        await sleep(10000);
     }
     
     betAmount = (amount) => {
@@ -114,11 +159,16 @@ export class BetterEngine {
     }
     
     betAllIn = () => {
-        let allInBetElement = document.getElementById('interval10');
+        const allInBetElement = document.getElementById('interval10');
         allInBetElement?.click();
     }
+
+    betFifty = () => {
+        const fiftyBetElement = document.getElementById('interval5');
+        fiftyBetElement?.click();
+    }
     
-    better = async () => {
+    better = async (param) => {
         this.checkForConfiguration();
 
         console.log('\n\n-------- New Reading -------');
@@ -141,11 +191,15 @@ export class BetterEngine {
             this.lastMatchWasTournament = true
         }
     
-        if (betStatusElement && betStatusElement.innerText !== fightOngoingText && betStatusElement.innerText === betsAreOpenText) {
+        if (
+            betStatusElement
+            && betStatusElement.innerText !== fightOngoingText 
+            && betStatusElement.innerText === betsAreOpenText
+        ) {
     
             if (!this.alreadyBet && this.previousBalance !== null) {
                 // Fight just Finished
-                this.calculateFightResult();
+                await this.calculateFightResult();
             }
             // Can Bet
             console.log('---- CAN BET -----');
@@ -158,13 +212,19 @@ export class BetterEngine {
                 } else {
                     this.lastMatchWasTournament = true
                 }
-                console.log(`-- All In - Let's Go!`)
-                this.betAllIn();
+                
+                if (balance > 10000 && !this.lastMatchWasTournament) {
+                    console.log(`-- 50% - Let's Go!`)
+                    this.betFifty();
+                } else {
+                    console.log(`-- All In - Let's Go!`)
+                    this.betAllIn();
+                }
             } else {
                 this.processBetRules();
             }
             // Actually Bet
-            this.placeRandomBet();
+            await this.performBet();
             this.previousBalance = this.balance.slice();
         } else if (betStatusElement.innerText === fightOngoingText) {
             console.log('XXXXXXXX FIGHT ONGOING XXXXXXXX')
